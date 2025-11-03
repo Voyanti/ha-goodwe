@@ -111,9 +111,9 @@ class Server(ABC):
 
 
         # account for last item count: meaning the largest address needs to be incremented
-        if holding_params[-1][1]["count"] != 1:
+        if len(holding_params) and holding_params[-1][1]["count"] != 1:
             holding_addrs.append(holding_params[-1][1]["count"] - 1 + holding_params[-1][1]["addr"])
-        if input_params[-1][1]["count"] != 1:
+        if len(input_params) and input_params[-1][1]["count"] != 1:
             input_addrs.append(input_params[-1][1]["count"] - 1 + input_params[-1][1]["addr"])
 
         logger.info(f"{holding_addrs=}")
@@ -192,7 +192,7 @@ class Server(ABC):
 
     def is_available(self, register_name="Device type code"):
         """ Contacts any server register and returns true if the server is available """
-        logger.info(f"Verifying availability of server {self.name}")
+        logger.info(f"Verifying availability of server {self.name} from {register_name=}")
 
         available = True
 

@@ -16,7 +16,7 @@ from paho.mqtt.client import MQTTMessage
 import sys
 
 logging.basicConfig(
-    level=logging.INFO,  # Set logging level
+    level=logging.DEBUG,  # Set logging level
     # Format with timestamp
     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",  # Date format

@@ -102,9 +102,18 @@ class MqttClient(mqtt.Client):
                 "device_class": details["device_class"].value,
                 "unit_of_measurement": details["unit"],
             }
+            if details["unit"] != "":
+                discovery_payload.update(unit_of_measurement=details["unit"])
+            if "value_template" in details: #enum
+                discovery_payload.update(value_template=details["value_template"])
+
             state_class = details.get("state_class", False)
             if state_class:
                 discovery_payload['state_class'] = state_class
+                
+            # from sungrow
+            if details.get("value_template") is not None:
+                discovery_payload.update(value_template=details["value_template"])
             discovery_topic = f"{self.ha_discovery_topic}/sensor/{nickname}/{slugify(register_name)}/config"
 
             self.publish(discovery_topic, json.dumps(
@@ -112,18 +121,37 @@ class MqttClient(mqtt.Client):
 
         self.publish_availability(True, server)
 
-        # for register_name, details in server.write_parameters.items():
-        #     discovery_payload = {
-        #         "name": register_name,
-        #         "unique_id": f"{nickname}_{slugify(register_name)}",
-        #         "command_topic": f"{self.base_topic}/{nickname}/{slugify(register_name)}/set",
-        #         "unit_of_measurement": details["unit"],
-        #         "availability_topic": availability_topic,
-        #         "device": device
-        #     }
+        for register_name, details in server.write_parameters.items():
+            item_topic = f"{self.base_topic}/{nickname}/{slugify(register_name)}"
+            discovery_payload = {
+                # required
+                "command_topic": item_topic + f"/set", 
+                "state_topic": item_topic + f"/state",
+                # optional
+                "name": register_name,
+                "unique_id": f"{nickname}_{slugify(register_name)}",
+                # "unit_of_measurement": details["unit"],
+                "availability_topic": availability_topic,
+                "device": device
+            }
+            if details.get("unit") is not None:
+                discovery_payload.update(unit_of_measurement=details["unit"])
+            if details.get("options") is not None:
+                discovery_payload.update(options=details["options"])
+                if details.get("value_template") is not None:
+                    discovery_payload.update(value_template=details["value_template"])
+                if details.get("command_template") is not None:
+                    discovery_payload.update(command_template=details["command_template"])
+            if details.get("min") is not None and details.get("max") is not None:
+                discovery_payload.update(min=details["min"], max=details["max"])
+            if details.get("payload_off") is not None and details.get("payload_on") is not None:
+                discovery_payload.update(payload_off=details["payload_off"], payload_on=details["payload_on"])
 
-        #     discovery_topic = f"{self.ha_discovery_topic}/number/{nickname}/{slugify(register_name)}/config"
-        #     self.publish(discovery_topic, json.dumps(discovery_payload), retain=True)
+            discovery_topic = f"{self.ha_discovery_topic}/{details['ha_entity_type'].value}/{nickname}/{slugify(register_name)}/config"
+            self.publish(discovery_topic, json.dumps(discovery_payload), retain=True)
+
+            # subscribe to write topics
+            self.subscribe(discovery_payload["command_topic"])
 
     def publish_to_ha(self, register_name, value, server):
         nickname = slugify(server.name)

@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional, Any, TypedDict
+from typing import Literal, Optional, Any, TypedDict
 
 
 class RegisterTypes(Enum):
@@ -18,6 +18,8 @@ class DataType(Enum):
     U64 = "U64"
 
     # Signed integers
+    I8L = "I8L"
+    I8H = "I8H"
     I16 = "I16"
     I32 = "I32"
     I64 = "I64"
@@ -52,6 +54,8 @@ class DataType(Enum):
     def min_value(self) -> Optional[int]:
         """Returns the minimum value for numeric types."""
         ranges = {
+            DataType.I8L: -128,  # -2^7
+            DataType.I8H: -128,  # -2^7
             DataType.U16: 0,
             DataType.U32: 0,
             DataType.I16: -32768,  # -2^15
@@ -66,6 +70,8 @@ class DataType(Enum):
     def max_value(self) -> Optional[int]:
         """Returns the maximum value for numeric types."""
         ranges = {
+            DataType.I8L: 127,  # 2^7-1
+            DataType.I8H: 127,  # 2^7-1
             DataType.U16: 65535,  # 2^16 - 1
             DataType.U32: 4294967295,  # 2^32 - 1
             DataType.I16: 32767,  # 2^15 - 1
@@ -131,9 +137,28 @@ class DeviceClass(Enum):
     WEIGHT = "weight"
     WIND_SPEED = "wind_speed"
 
+device_class_to_rounding: dict[DeviceClass, int] = { 
+        DeviceClass.REACTIVE_POWER: 0,
+        DeviceClass.ENERGY: 1,
+        DeviceClass.FREQUENCY: 1,
+        DeviceClass.POWER_FACTOR: 1,
+        DeviceClass.APPARENT_POWER: 0, 
+        DeviceClass.CURRENT: 1,
+        DeviceClass.VOLTAGE: 0,
+        DeviceClass.POWER: 0
+    }
 
-Parameter = TypedDict(
-    "Parameter",
+class HAEntityType(Enum):
+    NUMBER = 'number'
+    SWITCH = 'switch'
+    SELECT = 'select'
+
+    SENSOR = 'sensor'
+    BINARY_SENSOR = 'binary_sensor'
+
+# all parameters are required to have these fields
+ParameterReq = TypedDict(
+    "ParameterReq",
     {
         "addr": int,
         "count": int,
@@ -144,6 +169,47 @@ Parameter = TypedDict(
         "register_type": RegisterTypes,
     },
 )
+
+# inherit required parameters, add optional parameters
+class Parameter(ParameterReq, total=False):
+    remarks: str
+    state_class: Literal["measurement", "total", "total_increasing"]
+    value_template: str
+
+    # all oarameters are required to have these fields
+WriteParameterReq = TypedDict(
+    "WriteParameterReq",
+    {
+        "addr": int,
+        "count": int,
+        "dtype": DataType,
+        "multiplier": float,
+        "register_type": RegisterTypes,
+        'ha_entity_type': HAEntityType,
+    },
+)
+
+class WriteSelectParameterReq(WriteParameterReq, total=True):
+    # select
+    options: list[str] # required for select
+
+class WriteSelectParameter(WriteSelectParameterReq, total=False):
+    value_template: str
+    command_template: str
+    
+class WriteParameter(WriteParameterReq, total=False):
+    device_class: DeviceClass # when not specified w=for a switch, a none type switch is used
+
+    # number
+    unit: str
+    min: float  
+    max: float
+
+    # switch
+    payload_off: int
+    payload_on: int
+
+    
 
 if __name__ == "__main__":
     print(DataType.U16.min_value)

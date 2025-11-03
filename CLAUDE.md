@@ -4,9 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Home Assistant add-on for Atess Inverters that communicates over Modbus (TCP/RTU) and publishes data to MQTT for Home Assistant integration. Despite the repository name `ha-goodwe`, this codebase is designed for **Atess** inverters.
+This is a Home Assistant add-on for **GoodWe Inverters** that communicates over Modbus (TCP/RTU) and publishes data to MQTT for Home Assistant integration.
+
+**Important**: This codebase was cloned from an Atess inverter add-on and is being adapted for GoodWe inverters. You will see many references to "Atess" throughout the code (e.g., `atess_inverter.py`, `atess_registers.py`, class names, etc.). This is intentional - the architecture and core components remain the same, but the register definitions and device-specific logic need to be updated for GoodWe compatibility.
 
 The add-on reads inverter/battery data via Modbus at configurable intervals and publishes to MQTT topics that Home Assistant auto-discovers. It also supports writing parameters back to devices via MQTT commands.
+
+**Modbus Documentation**: See `pdfs/Ezlogger3000C_MODBUS_Interface_Description (1).pdf` for GoodWe Modbus register specifications.
 
 ## Commands
 
@@ -87,10 +91,12 @@ See `config.yaml` for example configuration and `src/options.py` for dataclass d
 
 ### Register Definitions
 
-Register maps are defined in `src/atess_registers.py`:
+Register maps are currently defined in `src/atess_registers.py` (inherited from Atess codebase):
 - `atess_parameters`: Common read-only parameters
 - `PCS_parameters`, `PBD_parameters`, `not_PCS_parameters`: Model-specific parameters
 - `atess_write_parameters`, `atess_PBD_write_parameters`: Writable parameters
+
+**Note**: These will need to be updated for GoodWe inverters based on the Modbus specification in `pdfs/`.
 
 Each parameter includes: address, data type, multiplier, unit, device_class, Home Assistant entity type.
 
@@ -129,7 +135,10 @@ Each parameter includes: address, data type, multiplier, unit, device_class, Hom
 - Tests use `SpoofClient` for mocking Modbus responses
 - Local testing requires mosquitto broker running on port 1884
 - Serial numbers should be verified on connection (though currently commented out in some places)
-- The codebase was originally designed for Sungrow inverters (references remain in tests)
+- **Legacy code notes**:
+  - This was cloned from Atess inverter add-on, so Atess references remain throughout
+  - Tests reference Sungrow inverters (from an earlier generation)
+  - When adapting for GoodWe, focus on register definitions and device-specific decoding/encoding logic
 
 ## Home Assistant Integration
 

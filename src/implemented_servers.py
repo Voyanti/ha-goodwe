@@ -1,6 +1,7 @@
 from enum import Enum
 
-from .atess_inverter import AtessInverter
+from .goodwe_logger import GoodweLogger
+
 
 class ServerTypes(Enum):
-    ATESS_INVERTER = AtessInverter
+    GOODWE_LOGGER = GoodweLogger

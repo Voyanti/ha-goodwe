@@ -8,160 +8,160 @@ logger = logging.getLogger(__name__)
 goodwe_gt_parameters: dict[str, Parameter] = {
     # PV String Voltages (Address 32016-32055)
     "PV1 Voltage": Parameter(
-        addr=32016, count=1, dtype=DataType.I16, multiplier=10, unit="V",
+        addr=32016+1, count=1, dtype=DataType.I16, multiplier=1/10, unit="V",
         device_class=DeviceClass.VOLTAGE,
         register_type=RegisterTypes.HOLDING_REGISTER
     ),
     "PV2 Voltage": Parameter(
-        addr=32018, count=1, dtype=DataType.I16, multiplier=10, unit="V",
+        addr=32018+1, count=1, dtype=DataType.I16, multiplier=1/10, unit="V",
         device_class=DeviceClass.VOLTAGE,
         register_type=RegisterTypes.HOLDING_REGISTER
     ),
     "PV3 Voltage": Parameter(
-        addr=32020, count=1, dtype=DataType.I16, multiplier=10, unit="V",
+        addr=32020+1, count=1, dtype=DataType.I16, multiplier=1/10, unit="V",
         device_class=DeviceClass.VOLTAGE,
         register_type=RegisterTypes.HOLDING_REGISTER
     ),
     "PV4 Voltage": Parameter(
-        addr=32022, count=1, dtype=DataType.I16, multiplier=10, unit="V",
+        addr=32022+1, count=1, dtype=DataType.I16, multiplier=1/10, unit="V",
         device_class=DeviceClass.VOLTAGE,
         register_type=RegisterTypes.HOLDING_REGISTER
     ),
 
     # PV String Currents (Address 32017-32055)
     "PV1 Current": Parameter(
-        addr=32017, count=1, dtype=DataType.I16, multiplier=100, unit="A",
+        addr=32017+1, count=1, dtype=DataType.I16, multiplier=1/100, unit="A",
         device_class=DeviceClass.CURRENT,
         register_type=RegisterTypes.HOLDING_REGISTER
     ),
     "PV2 Current": Parameter(
-        addr=32019, count=1, dtype=DataType.I16, multiplier=100, unit="A",
+        addr=32019+1, count=1, dtype=DataType.I16, multiplier=1/100, unit="A",
         device_class=DeviceClass.CURRENT,
         register_type=RegisterTypes.HOLDING_REGISTER
     ),
     "PV3 Current": Parameter(
-        addr=32021, count=1, dtype=DataType.I16, multiplier=100, unit="A",
+        addr=32021+1, count=1, dtype=DataType.I16, multiplier=1/100, unit="A",
         device_class=DeviceClass.CURRENT,
         register_type=RegisterTypes.HOLDING_REGISTER
     ),
     "PV4 Current": Parameter(
-        addr=32023, count=1, dtype=DataType.I16, multiplier=100, unit="A",
+        addr=32023+1, count=1, dtype=DataType.I16, multiplier=1/100, unit="A",
         device_class=DeviceClass.CURRENT,
         register_type=RegisterTypes.HOLDING_REGISTER
     ),
 
     # Grid Line Voltages (Address 32066-32068)
     "Grid Voltage AB": Parameter(
-        addr=32066, count=1, dtype=DataType.U16, multiplier=10, unit="V",
+        addr=32066+1, count=1, dtype=DataType.U16, multiplier=1/10, unit="V",
         device_class=DeviceClass.VOLTAGE,
         register_type=RegisterTypes.HOLDING_REGISTER
     ),
     "Grid Voltage BC": Parameter(
-        addr=32067, count=1, dtype=DataType.U16, multiplier=10, unit="V",
+        addr=32067+1, count=1, dtype=DataType.U16, multiplier=1/10, unit="V",
         device_class=DeviceClass.VOLTAGE,
         register_type=RegisterTypes.HOLDING_REGISTER
     ),
     "Grid Voltage CA": Parameter(
-        addr=32068, count=1, dtype=DataType.U16, multiplier=10, unit="V",
+        addr=32068+1, count=1, dtype=DataType.U16, multiplier=1/10, unit="V",
         device_class=DeviceClass.VOLTAGE,
         register_type=RegisterTypes.HOLDING_REGISTER
     ),
 
     # Grid Phase Voltages (Address 32069-32071)
     "Grid Voltage A": Parameter(
-        addr=32069, count=1, dtype=DataType.U16, multiplier=10, unit="V",
+        addr=32069+1, count=1, dtype=DataType.U16, multiplier=1/10, unit="V",
         device_class=DeviceClass.VOLTAGE,
         register_type=RegisterTypes.HOLDING_REGISTER
     ),
     "Grid Voltage B": Parameter(
-        addr=32070, count=1, dtype=DataType.U16, multiplier=10, unit="V",
+        addr=32070+1, count=1, dtype=DataType.U16, multiplier=1/10, unit="V",
         device_class=DeviceClass.VOLTAGE,
         register_type=RegisterTypes.HOLDING_REGISTER
     ),
     "Grid Voltage C": Parameter(
-        addr=32071, count=1, dtype=DataType.U16, multiplier=10, unit="V",
+        addr=32071+1, count=1, dtype=DataType.U16, multiplier=1/10, unit="V",
         device_class=DeviceClass.VOLTAGE,
         register_type=RegisterTypes.HOLDING_REGISTER
     ),
 
     # Grid Phase Currents (Address 32072-32076, S32 type)
     "Grid Current A": Parameter(
-        addr=32072, count=2, dtype=DataType.I32, multiplier=1000, unit="A",
+        addr=32072+1, count=2, dtype=DataType.I32, multiplier=1/1000, unit="A",
         device_class=DeviceClass.CURRENT,
         register_type=RegisterTypes.HOLDING_REGISTER
     ),
     "Grid Current B": Parameter(
-        addr=32074, count=2, dtype=DataType.I32, multiplier=1000, unit="A",
+        addr=32074+1, count=2, dtype=DataType.I32, multiplier=1/1000, unit="A",
         device_class=DeviceClass.CURRENT,
         register_type=RegisterTypes.HOLDING_REGISTER
     ),
     "Grid Current C": Parameter(
-        addr=32076, count=2, dtype=DataType.I32, multiplier=1000, unit="A",
+        addr=32076+1, count=2, dtype=DataType.I32, multiplier=1/1000, unit="A",
         device_class=DeviceClass.CURRENT,
         register_type=RegisterTypes.HOLDING_REGISTER
     ),
 
     # Power and Energy (Address 32080+)
     "Active Power": Parameter(
-        addr=32080, count=2, dtype=DataType.I32, multiplier=1000, unit="kW",
+        addr=32080+1, count=2, dtype=DataType.I32, multiplier=1/1000, unit="kW",
         device_class=DeviceClass.POWER,
         register_type=RegisterTypes.HOLDING_REGISTER
     ),
     "Reactive Power": Parameter(
-        addr=32082, count=2, dtype=DataType.I32, multiplier=1000, unit="kVar",
+        addr=32082+1, count=2, dtype=DataType.I32, multiplier=1/1000, unit="kVar",
         device_class=DeviceClass.POWER,
         register_type=RegisterTypes.HOLDING_REGISTER
     ),
     "Power Factor": Parameter(
-        addr=32084, count=1, dtype=DataType.I16, multiplier=1000, unit="",
+        addr=32084+1, count=1, dtype=DataType.I16, multiplier=1/1000, unit="",
         device_class=DeviceClass.POWER_FACTOR,
         register_type=RegisterTypes.HOLDING_REGISTER
     ),
     "Grid Frequency": Parameter(
-        addr=32085, count=1, dtype=DataType.U16, multiplier=100, unit="Hz",
+        addr=32085+1, count=1, dtype=DataType.U16, multiplier=1/100, unit="Hz",
         device_class=DeviceClass.FREQUENCY,
         register_type=RegisterTypes.HOLDING_REGISTER
     ),
 
     # Insulation
     # "Insulation Impedance": Parameter(
-    #     addr=32088, count=1, dtype=DataType.U16, multiplier=1, unit="k�",
+    #     addr=32088+1, count=1, dtype=DataType.U16, multiplier=1, unit="k",
     #     device_class=DeviceClass.ENUM,
     #     register_type=RegisterTypes.HOLDING_REGISTER
     # ),
 
     # Energy Totals
     "Total Energy Production": Parameter(
-        addr=32106, count=2, dtype=DataType.U32, multiplier=100, unit="kWh",
+        addr=32106+1, count=2, dtype=DataType.U32, multiplier=1/100, unit="kWh",
         device_class=DeviceClass.ENERGY,
         register_type=RegisterTypes.HOLDING_REGISTER
     ),
     "Daily Energy Production": Parameter(
-        addr=32114, count=2, dtype=DataType.U32, multiplier=100, unit="kWh",
+        addr=32114+1, count=2, dtype=DataType.U32, multiplier=1/100, unit="kWh",
         device_class=DeviceClass.ENERGY,
         register_type=RegisterTypes.HOLDING_REGISTER
     ),
 
     # Device Information
     "Serial Number": Parameter(
-        addr=35502, count=8, dtype=DataType.UTF8, multiplier=1, unit="",
+        addr=35502+1, count=1, dtype=DataType.UTF8, multiplier=1, unit="",
         device_class=DeviceClass.ENUM,
         register_type=RegisterTypes.HOLDING_REGISTER
     ),
     "Model": Parameter(
-        addr=35510, count=5, dtype=DataType.UTF8, multiplier=1, unit="",
+        addr=35510+1, count=11, dtype=DataType.UTF8, multiplier=1, unit="",
         device_class=DeviceClass.ENUM,
         register_type=RegisterTypes.HOLDING_REGISTER
     ),
 
     # Status and Diagnostics
     "DSP Fault Code": Parameter(
-        addr=35710, count=2, dtype=DataType.U32, multiplier=1, unit="",
+        addr=35710+1, count=2, dtype=DataType.U32, multiplier=1, unit="",
         device_class=DeviceClass.ENUM,
         register_type=RegisterTypes.HOLDING_REGISTER
     ),
     "Work Mode": Parameter(
-        addr=35758, count=1, dtype=DataType.U16, multiplier=1, unit="",
+        addr=35758+1, count=1, dtype=DataType.U16, multiplier=1, unit="",
         device_class=DeviceClass.ENUM,
         register_type=RegisterTypes.HOLDING_REGISTER
     ),
@@ -174,7 +174,7 @@ class GoodweGT(Server):
         super().__init__(name, serial, modbus_id, connected_client)
 
         self._manufacturer = "Goodwe"
-        self._supported_models = ('02gw125k-g',)  # GT-series grid-tied inverters
+        self._supported_models = ('GW125K-GT', )  # GT-series grid-tied inverters
         self._serialnum = "unknown"
         self._parameters = dict.copy(goodwe_gt_parameters)
         self._write_parameters = {}
@@ -199,13 +199,24 @@ class GoodweGT(Server):
         # Use grid frequency as availability check for GT inverters
         return super().is_available(register_name)
 
+    def set_model(self):
+        """
+            Reads model-holding register, decodes it and sets self.model: str to its value..
+            Specify decoding in Server.device_info = {modelcode:    {name:modelname, ...}  }
+        """
+        logger.info(f"Reading model for server {self.name}")
+        self.model = self.read_model()
+        logger.info(f"Model read as {self.model}")
+
+        if self.model not in self.supported_models:
+            logger.warning(f"Model read as {self.model=} is not in {self._supported_models=}")
     def read_model(self) -> str:
-        """Read and return the inverter model from register 35510"""
+        """Read and return the inverter model from register 35510+1"""
         model = self.read_registers("Model")
         if model is None:
             logger.warning("Could not read model from inverter")
             return "gt"  # Default to generic GT model
-        return model.lower().strip()
+        return model.strip()
 
     def verify_serialnum(self, serialnum_name_in_definition: str = "Serial Number") -> bool:
         """Verify that the serialnum specified in config.yaml matches

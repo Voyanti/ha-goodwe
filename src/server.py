@@ -183,7 +183,7 @@ class Server(ABC):
             self.connected_client._handle_error_response(result)
             raise ReadException(f"Error reading register {parameter_name}") 
 
-        logger.debug(f"Raw register begin value: {result.registers[0]}")
+        logger.debug(f"Raw register value: {result.registers}")
         val = self._decoded(result.registers, dtype)
         if multiplier != 1:
             val *= multiplier

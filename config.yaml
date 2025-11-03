@@ -40,7 +40,7 @@ schema:
   servers:
     - name: str
       serialnum: str
-      server_type: list(GOODWE_LOGGER)
+      server_type: list(GOODWE_LOGGER|GOODWE_HT|GOODWE_GT)
       connected_client: str
       modbus_id: int(0,255)
       # PT: int?

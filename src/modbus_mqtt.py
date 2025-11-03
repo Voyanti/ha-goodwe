@@ -1,27 +1,26 @@
 import os
 import signal
-from typing import Callable
 import paho.mqtt.client as mqtt
 from paho.mqtt.enums import CallbackAPIVersion
 import json
 import logging
-
+from .loader import AppOptions
 from .helpers import slugify
-from .options import AppOptions
 
 from random import getrandbits
 from time import time, sleep
 from queue import Queue
 
 logger = logging.getLogger(__name__)
-# RECV_Q: Queue = Queue()
+RECV_Q: Queue = Queue()
 
 
 class MqttClient(mqtt.Client):
     """
         paho MQTT abstraction for home assistant
     """
-    def __init__(self, options: AppOptions) -> None:
+
+    def __init__(self, options: AppOptions):
         def generate_uuid():
             random_part = getrandbits(64)
             # Get current timestamp in milliseconds
@@ -53,45 +52,24 @@ class MqttClient(mqtt.Client):
             logger.info(f"Stopping all threads")
             os.kill(os.getpid(), signal.SIGINT)
 
-        def on_message(client, userdata, msg):
+        def on_message(client, userdata, message):
             logger.info("Received message on MQTT")
             try: 
-                self.message_handler(msg)
+                sleep(0.01)
+                RECV_Q.put(message)                         # thread-safe
             except Exception as e:
                 logger.error(f"Exception while handling received message. Stop Process. \n {e}")
                 os.kill(os.getpid(), signal.SIGINT)
+
+
 
         self.on_connect = on_connect
         self.on_disconnect = on_disconnect
         self.on_message = on_message
 
-    def message_handler(self, msg) -> None:
-        """
-            Writes appropriate server registers for each message in mqtt receive queue
-        """
-        # command_topic = f"{self.base_topic}/{server.nickname}/{slugify(register_name)}/set"
-        server_ha_display_name: str = msg.topic.split('/')[1]
-        s = None
-        for s in self.servers: 
-            if s.name == server_ha_display_name:
-                server = s
-        if s is None: raise ValueError(f"Server {server_ha_display_name} not available. Cannot write.")
-        register_slug: str = msg.topic.split('/')[2]
-        value: str = msg.payload.decode('utf-8')
-        register_name = server.write_parameters_slug_to_name[register_slug]
-
-
-        server.write_registers(register_slug, value)
-
-
-        value = server.read_registers(register_name)
-        logger.info(f"read {value=}")
-        self.publish_to_ha(
-            register_slug, value, server)
-
-    def publish_discovery_topics(self, server) -> None:
+    def publish_discovery_topics(self, server):
         # TODO check if more separation from server is necessary/ possible
-        nickname = server.name
+        nickname = slugify(server.name)
         if not server.model or not server.manufacturer or not server.serial or not nickname or not server.parameters:
             logging.info(
                 f"Server not properly configured. Cannot publish MQTT info")
@@ -102,14 +80,14 @@ class MqttClient(mqtt.Client):
         device = {
             "manufacturer": server.manufacturer,
             "model": server.model,
-            "identifiers": [f"{nickname}"],
+            "identifiers": [f"{server.name}"],
             "name": f"{nickname}"
             # "name": f"{server.manufacturer} {server.serialnum}"
         }
 
         # publish discovery topics for legal registers
         # assume registers in server.registers
-        availability_topic = f"{self.base_topic}_{nickname}/availability"
+        availability_topic = f"{self.base_topic}/{nickname}/availability"
 
         parameters = server.parameters
 
@@ -122,21 +100,11 @@ class MqttClient(mqtt.Client):
                 "availability_topic": availability_topic,
                 "device": device,
                 "device_class": details["device_class"].value,
+                "unit_of_measurement": details["unit"],
             }
-            if details["unit"] != "":
-                discovery_payload.update(unit_of_measurement=details["unit"])
-            if "value_template" in details: #enum
-                discovery_payload.update(value_template=details["value_template"])
-
             state_class = details.get("state_class", False)
             if state_class:
                 discovery_payload['state_class'] = state_class
-                
-            # from sungrow
-            if details.get("value_template") is not None:
-                discovery_payload.update(value_template=details["value_template"])
-            # from sungrow not used in atess yet
-                
             discovery_topic = f"{self.ha_discovery_topic}/sensor/{nickname}/{slugify(register_name)}/config"
 
             self.publish(discovery_topic, json.dumps(
@@ -144,47 +112,28 @@ class MqttClient(mqtt.Client):
 
         self.publish_availability(True, server)
 
-        for register_name, details in server.write_parameters.items():
-            item_topic = f"{self.base_topic}/{nickname}/{slugify(register_name)}"
-            discovery_payload = {
-                # required
-                "command_topic": item_topic + f"/set", 
-                "state_topic": item_topic + f"/state",
-                # optional
-                "name": register_name,
-                "unique_id": f"{nickname}_{slugify(register_name)}",
-                # "unit_of_measurement": details["unit"],
-                "availability_topic": availability_topic,
-                "device": device
-            }
-            if details.get("unit") is not None:
-                discovery_payload.update(unit_of_measurement=details["unit"])
-            if details.get("options") is not None:
-                discovery_payload.update(options=details["options"])
-                if details.get("value_template") is not None:
-                    discovery_payload.update(value_template=details["value_template"])
-                if details.get("command_template") is not None:
-                    discovery_payload.update(command_template=details["command_template"])
-            if details.get("min") is not None and details.get("max") is not None:
-                discovery_payload.update(min=details["min"], max=details["max"])
-            if details.get("payload_off") is not None and details.get("payload_on") is not None:
-                discovery_payload.update(payload_off=details["payload_off"], payload_on=details["payload_on"])
+        # for register_name, details in server.write_parameters.items():
+        #     discovery_payload = {
+        #         "name": register_name,
+        #         "unique_id": f"{nickname}_{slugify(register_name)}",
+        #         "command_topic": f"{self.base_topic}/{nickname}/{slugify(register_name)}/set",
+        #         "unit_of_measurement": details["unit"],
+        #         "availability_topic": availability_topic,
+        #         "device": device
+        #     }
 
-            discovery_topic = f"{self.ha_discovery_topic}/{details['ha_entity_type'].value}/{nickname}/{slugify(register_name)}/config"
-            self.publish(discovery_topic, json.dumps(discovery_payload), retain=True)
-
-            # subscribe to write topics
-            self.subscribe(discovery_payload["command_topic"])
+        #     discovery_topic = f"{self.ha_discovery_topic}/number/{nickname}/{slugify(register_name)}/config"
+        #     self.publish(discovery_topic, json.dumps(discovery_payload), retain=True)
 
     def publish_to_ha(self, register_name, value, server):
-        nickname = server.name
+        nickname = slugify(server.name)
         state_topic = f"{self.base_topic}/{nickname}/{slugify(register_name)}/state"
         msg_info = self.publish(state_topic, value, qos=1)  # , retain=True)
             
 
     def publish_availability(self, avail, server):
-        nickname = server.name
-        availability_topic = f"{self.base_topic}_{nickname}/availability"
+        nickname = slugify(server.name)
+        availability_topic = f"{self.base_topic}/{nickname}/availability"
         msg_info = self.publish(availability_topic,
                      "online" if avail else "offline", qos=1, retain=True)
         

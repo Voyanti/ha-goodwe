@@ -3,27 +3,30 @@ from datetime import datetime, timedelta
 import atexit
 import logging
 from queue import Queue
+from typing import Callable
+
+from pymodbus import ModbusException
 
 from .loader import load_validate_options
 from .options import AppOptions
 from .client import Client
 from .implemented_servers import ServerTypes
 from .server import Server
-from .modbus_mqtt import MqttClient
+from .modbus_mqtt import MqttClient, RECV_Q
 from paho.mqtt.enums import MQTTErrorCode
 from paho.mqtt.client import MQTTMessage
 
 import sys
 
 logging.basicConfig(
-    level=logging.DEBUG,  # Set logging level
+    level=logging.INFO,  # Set logging level
     # Format with timestamp
-    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+    format="%(asctime)s - %(levelname)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",  # Date format
 )
 logger = logging.getLogger(__name__)
 
-READ_INTERVAL = 0.004
+READ_INTERVAL = 0.001
 
 
 def exit_handler(
@@ -39,17 +42,6 @@ def exit_handler(
 
     mqtt_client.loop_stop()
 
-def test_different_batch_sizes(client0: Client):
-    from .enums import RegisterTypes
-    import time
-    count = 125
-    logger.info(f"\n{count=}")
-    start = time.time()
-    result = client0.read(1, count, 1, RegisterTypes.INPUT_REGISTER)
-    if result.isError():
-        client0._handle_error_response(result)
-        raise Exception(f"Error reading registers")
-    logger.info(f"done. elapsed time: {time.time()-start},\n{result.registers}\n")
 
 class App:
     def __init__(self, client_instantiator_callback, server_instantiator_callback, options_rel_path=None) -> None:
@@ -64,19 +56,21 @@ class App:
         self.pause_interval = self.OPTIONS.pause_interval_seconds
         # midnight_sleep_enabled=True, minutes_wakeup_after=5
 
+        self.disconnect_stack = []
+
         # Setup callbacks
         self.client_instantiator_callback = client_instantiator_callback
-        self.server_instantiator_callback = server_instantiator_callback
+        self.server_instantiator_callback: Callable[[AppOptions, list[Client]], list[Server]] = server_instantiator_callback
 
     def setup(self) -> None:
         self.sleep_if_midnight()
 
         logger.info("Instantiate clients")
-        self.clients: list[Client]= self.client_instantiator_callback(self.OPTIONS)
+        self.clients = self.client_instantiator_callback(self.OPTIONS)
         logger.info(f"{len(self.clients)} clients set up")
 
         logger.info("Instantiate servers")
-        self.servers: list[Server] = self.server_instantiator_callback(
+        self.servers = self.server_instantiator_callback(
             self.OPTIONS, self.clients)
         logger.info(f"{len(self.servers)} servers set up")
         # if len(servers) == 0: raise RuntimeError(f"No supported servers configured")
@@ -85,33 +79,33 @@ class App:
         for client in self.clients:
             client.connect()
 
+        # Unavailable servers are noted for reconnect attempts later. Does not cause a crash
+        connected_servers = []
+        disconnected_servers= []
         for server in self.servers:
-            server.connect()
+            success: bool = server.connect()
+            if success:
+                connected_servers.append(server) 
+            else:
+                logger.error(f"Error Connecting to server {server.name}. Disable reading untill next loop")
+                disconnected_servers.append(server)
+        self.servers: list[Server]= connected_servers
+        self.disconnected_servers: list[Server] = disconnected_servers
+
 
         # Setup MQTT Client
         self.mqtt_client = MqttClient(self.OPTIONS)
-        self.mqtt_client.servers = self.servers
-        logger.info(f"Connecting to MQTT broker")
-        self.mqtt_client.connect_timeout = 20
+        succeed: MQTTErrorCode = self.mqtt_client.connect(
+            host=self.OPTIONS.mqtt_host, port=self.OPTIONS.mqtt_port
+        )
+        if succeed.value != 0:
+            logger.info(
+                f"MQTT Connection error: {succeed.name}, code {succeed.value}")
+            
+        for server in disconnected_servers:
+            self.mqtt_client.publish_availability(False, server)
 
-        for i in range(2):
-            try: 
-                succeed: MQTTErrorCode = self.mqtt_client.connect(
-                    host=self.OPTIONS.mqtt_host, port=self.OPTIONS.mqtt_port
-                )
-                if succeed.value != 0:
-                    logger.info(
-                        f"MQTT Connection error: {succeed.name}, code {succeed.value}")
-                    
-            # except ConnectionRefusedError as con_err:
-            #     logger.error(f"Connection refused. Sleep 1 min and retry")
-            #     sleep(60)
-            except Exception as e:
-                logger.error(f"{e} \n\n Sleep 1 min and retry mqtt connection")
-                sleep(60)
-
-
-        atexit.register(exit_handler, self.servers,
+        atexit.register(exit_handler, self.servers + self.disconnected_servers,
                         self.clients, self.mqtt_client)
 
         sleep(READ_INTERVAL)
@@ -124,43 +118,55 @@ class App:
         for server in self.servers:
             self.mqtt_client.publish_discovery_topics(server)
 
-    def loop(self, loop_once=False) -> None:
-        if not self.servers or not self.clients:
-            logger.info(f"In loop but app servers or clients not setup up")
-            raise ValueError(
-                f"In loop but app servers or clients not setup up")
+    def loop(self, loop_count: int | None = None) -> None:
+        # if not self.servers or not self.clients:
+        #     logger.info(f"In loop but no app servers or clients setup up or available")
+        #     raise ValueError(
+        #         f"In loop but no app servers or clients setup up or available")
 
         # every read_interval seconds, read the registers and publish to mqtt
+        i = 0
         while True:
+            self.mqtt_client.ensure_connected(self.OPTIONS.mqtt_reconnect_attempts)
+
             for server in self.servers:
-                self.mqtt_client.ensure_connected(self.OPTIONS.mqtt_reconnect_attempts)
-                # update server state from modbus
-                server.read_batches()
-
-                # index required registers from saved state
-                # publish to ha
-                for register_name in server.write_parameters:
-                    value = server.read_from_state(register_name)
-                    self.mqtt_client.publish_to_ha(
-                        register_name, value, server)
-                    
-                logger.info(f"Published all Write parameter values for {server.name}")
                 sleep(READ_INTERVAL)
+                try: 
+                    for register_name, details in server.parameters.items():
+                        value = server.read_registers(register_name)
+                        self.mqtt_client.publish_to_ha(
+                            register_name, value, server)
+                    logger.info(
+                        f"Published all parameter values for {server.name=}")
+                except ModbusException as e:
+                    logger.error(f"Error reading register from {server.name=}: {e} ")
+                    self.disconnect_stack.append(server)
+                    continue
 
-                for register_name in server.parameters:
-                    value = server.read_from_state(register_name)
-                    self.mqtt_client.publish_to_ha(
-                        register_name, value, server)
-                logger.info(f"Published all Read parameter values for {server.name}")
-            logger.info("")
+            for disconn_server in self.disconnect_stack:
+                self.servers.remove(disconn_server)
+                self.disconnected_servers.append(disconn_server)
+            self.disconnect_stack = []
 
-            if loop_once:
-                break
-
-            # publish availability
+            # TODO: publish availability
             sleep(self.pause_interval)
 
+            # try reconnecting to disconnected servers
+            for server in reversed(self.disconnected_servers):
+                logger.info("Retrying connection to %s" % server.name)
+                success: bool = server.connect()
+                if success:
+                    logger.info("Succesfully reconnected to %s" % server.name)
+                    self.servers.append(server) 
+                    self.disconnected_servers.pop()
+                else:
+                    logger.error(f"Error Connecting to server %s. Disable reading untill next loop" % server.name)
+
             self.sleep_if_midnight()
+
+            i += 1
+            if loop_count is not None and i >= loop_count:
+                break
 
     def sleep_if_midnight(self) -> None:
         """
@@ -174,7 +180,6 @@ class App:
 
             if not (is_before_midnight or is_after_midnight):
                 break
-            logger.info(f"Sleeping over midnight")
 
             # Calculate appropriate sleep duration
             if is_before_midnight:
@@ -211,21 +216,13 @@ if __name__ == "__main__":
         app.connect()
         app.loop()
     else:                   # running locally
-        logging.basicConfig(
-            level=logging.DEBUG,  # Set logging level
-            # Format with timestamp
-            format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",  # Date format
-)
-        
         from .client import SpoofClient
         app = App(instantiate_clients, instantiate_servers, sys.argv[1])
         app.OPTIONS.mqtt_host = "localhost"
         app.OPTIONS.mqtt_port = 1884
-        app.OPTIONS.pause_interval_seconds = 10
 
-        def instantiate_spoof_clients(Options) -> list[SpoofClient]:
-            return [SpoofClient()]
+        def instantiate_spoof_clients(OPTS: AppOptions) -> list[SpoofClient]:
+            return [SpoofClient(client_opts.name) for client_opts in OPTS.clients]
 
         app = App(
             client_instantiator_callback=instantiate_spoof_clients,
@@ -235,13 +232,9 @@ if __name__ == "__main__":
 
         app.setup()
         for s in app.servers:
-            s.connect = lambda: None
-            s.model = "PCS500"
-            s.setup_valid_registers_for_model()
-            s.find_register_extent()
-            s.create_batches()
+            s.connect = lambda: True
         app.connect()
-        app.loop(False)
+        app.loop(2)
 
     # finally:
     #     exit_handler(servers, clients, mqtt_client) TODO NB

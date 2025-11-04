@@ -19,6 +19,16 @@ options:
       server_type: GOODWE_LOGGER
       connected_client: client1
       modbus_id: 1
+    - name: GT
+      serialnum: USD0B4502B
+      server_type: GOODWE_GT
+      connected_client: client1
+      modbus_id: 2
+    - name: HT
+      serialnum: USD0B4502B
+      server_type: GOODWE_HT
+      connected_client: client1
+      modbus_id: 3
   clients:
     - name: client1
       type: TCP

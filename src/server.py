@@ -153,7 +153,7 @@ class Server(ABC):
         device_class_to_rounding: dict[DeviceClass, int] = {    # TODO define in deviceClass type
             DeviceClass.REACTIVE_POWER: 0,
             DeviceClass.ENERGY: 1,
-            DeviceClass.FREQUENCY: 1,
+            DeviceClass.FREQUENCY: 2,
             DeviceClass.POWER_FACTOR: 1,
             DeviceClass.APPARENT_POWER: 0, 
             DeviceClass.CURRENT: 1,

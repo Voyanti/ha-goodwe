@@ -26,6 +26,21 @@ Communicates with Goodwe Inverters/Logger/Meters over Modbus TCP/ Serial, and pu
 Supported models:
 - None
 
+## Goodwe-specifics
+
+When reading through the EzLogger3000:
+- Registers containing ASCII should be read using the listed start offset but
+num_registers or count == 0, not the number of registers to read - the device 
+will respond with the appropriate amount of data
+- When reading from both HT and GT type devices, wait a few seconds 
+(tested=5s) between reads from separate modsbus ids.
+- GT register 32072 (Grid Current A), 32066 (Grid Voltage AB): response length 
+seems to vary
+- When reading, the immediate response sometimes has a mismatching 
+Transport Identifier. Reread, and the logger responds to the original query
+- PV inverter switch off at nighttime ( logger responds with Modbus error code 
+0x04: slave device failure)
+
 <!-- ![Supports aarch64 Architecture][aarch64-shield]
 ![Supports amd64 Architecture][amd64-shield]
 ![Supports armhf Architecture][armhf-shield]

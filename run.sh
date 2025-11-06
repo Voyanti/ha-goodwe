@@ -1,9 +1,9 @@
 #!/usr/bin/with-contenv bashio
 set -e
 echo ""
-echo "*----------------------*"
-echo "| Atess Inverter Addon |"
-echo "*----------------------*"
+echo "*-----------------------*"
+echo "| Goodwe Inverter Addon |"
+echo "*-----------------------*"
 # echo "Starting..."
 
 cd /workdir

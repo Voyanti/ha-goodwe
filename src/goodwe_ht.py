@@ -2,7 +2,7 @@ from typing import final
 
 from .enums import DataType, DeviceClass, Parameter, RegisterTypes
 from .server import Server
-from .goodwe_ht_registers import goodwe_ht_parameters 
+from .goodwe_ht_registers import goodwe_ht_parameters, goodwe_ht_write_params
 import logging
 logger = logging.getLogger(__name__)
 
@@ -14,10 +14,10 @@ class GoodweHT(Server):
         super().__init__(name, serial, modbus_id, connected_client)
 
         self._manufacturer = "Goodwe"
-        self._supported_models = ('ht',)
+        self._supported_models = ('GW-100HT',)
         self._serialnum = "unknown"
         self._parameters = dict.copy(goodwe_ht_parameters)
-        self._write_parameters = {}
+        self._write_parameters = dict.copy(goodwe_ht_write_params)
 
     @property
     def manufacturer(self):
@@ -35,12 +35,25 @@ class GoodweHT(Server):
     def supported_models(self):
         return self._supported_models
 
-    def is_available(self, register_name="Status 1"):
+    def is_available(self, register_name="Active Power"):
         # self.verify_serialnum()
-        return super().is_available(register_name)
+        # return super().is_available(register_name)
+        return True
+
+    def set_model(self):
+        """
+            Reads model-holding register, decodes it and sets self.model: str to its value..
+            Specify decoding in Server.device_info = {modelcode:    {name:modelname, ...}  }
+        """
+        self.model = "HT"
 
     def read_model(self) -> str:
-        return "ht"
+        """Read and return the inverter model from register 35510+1"""
+        model = self.read_registers("Model")
+        if model is None:
+            logger.warning("Could not read model from inverter")
+            return "ht"
+        return model.strip()
 
     def verify_serialnum(self, serialnum_name_in_definition:str="Serial Number") -> bool:
         """ Verify that the serialnum specified in config.yaml matches

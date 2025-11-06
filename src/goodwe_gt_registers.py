@@ -1,4 +1,4 @@
-from enums import DataType, DeviceClass, Parameter, RegisterTypes
+from .enums import DataType, DeviceClass, Parameter, RegisterTypes
 
 
 goodwe_gt_parameters: dict[str, Parameter] = {
@@ -37,21 +37,21 @@ goodwe_gt_parameters: dict[str, Parameter] = {
     ),
 
     # Grid Phase Currents (Address 32072-32076, S32 type)
-    "Grid Current A": Parameter(
-        addr=32072+1, count=2, dtype=DataType.I32, multiplier=1/1000, unit="A",
-        device_class=DeviceClass.CURRENT,
-        register_type=RegisterTypes.HOLDING_REGISTER
-    ),
-    "Grid Current B": Parameter(
-        addr=32074+1, count=2, dtype=DataType.I32, multiplier=1/1000, unit="A",
-        device_class=DeviceClass.CURRENT,
-        register_type=RegisterTypes.HOLDING_REGISTER
-    ),
-    "Grid Current C": Parameter(
-        addr=32076+1, count=2, dtype=DataType.I32, multiplier=1/1000, unit="A",
-        device_class=DeviceClass.CURRENT,
-        register_type=RegisterTypes.HOLDING_REGISTER
-    ),
+    # "Grid Current A": Parameter(
+    #     addr=32072+1, count=2, dtype=DataType.I32, multiplier=1/1000, unit="A",
+    #     device_class=DeviceClass.CURRENT,
+    #     register_type=RegisterTypes.HOLDING_REGISTER
+    # ),
+    # "Grid Current B": Parameter(
+    #     addr=32074+1, count=2, dtype=DataType.I32, multiplier=1/1000, unit="A",
+    #     device_class=DeviceClass.CURRENT,
+    #     register_type=RegisterTypes.HOLDING_REGISTER
+    # ),
+    # "Grid Current C": Parameter(
+    #     addr=32076+1, count=2, dtype=DataType.I32, multiplier=1/1000, unit="A",
+    #     device_class=DeviceClass.CURRENT,
+    #     register_type=RegisterTypes.HOLDING_REGISTER
+    # ),
 
     # Power and Energy (Address 32080+)
     "Active Power": Parameter(

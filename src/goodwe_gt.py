@@ -42,12 +42,10 @@ class GoodweGT(Server):
             Reads model-holding register, decodes it and sets self.model: str to its value..
             Specify decoding in Server.device_info = {modelcode:    {name:modelname, ...}  }
         """
-        logger.info(f"Reading model for server {self.name}")
-        self.model = self.read_model()
-        logger.info(f"Model read as {self.model}")
 
-        if self.model not in self.supported_models:
-            logger.warning(f"Model read as {self.model=} is not in {self._supported_models=}")
+        self.model = 'GW125K-GT'
+        logger.warning(f"Skipping model read")
+
     def read_model(self) -> str:
         """Read and return the inverter model from register 35510+1"""
         model = self.read_registers("Model")

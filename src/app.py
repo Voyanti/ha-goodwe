@@ -21,10 +21,12 @@ import sys
 logging.basicConfig(
     level=logging.DEBUG,  # Set logging level
     # Format with timestamp
-    format="%(asctime)s - %(levelname)s - %(message)s",
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",  # Date format
 )
 logger = logging.getLogger(__name__)
+logging.getLogger().setLevel(logging.DEBUG)
+
 
 READ_INTERVAL = 0.001
 
@@ -125,6 +127,7 @@ class App:
         #         f"In loop but no app servers or clients setup up or available")
 
         # every read_interval seconds, read the registers and publish to mqtt
+        sleep(READ_INTERVAL)
         i = 0
         while True:
             self.mqtt_client.ensure_connected(self.OPTIONS.mqtt_reconnect_attempts)

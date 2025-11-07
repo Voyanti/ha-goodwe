@@ -25,7 +25,19 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",  # Date format
 )
 logger = logging.getLogger(__name__)
-logging.getLogger().setLevel(logging.DEBUG)
+
+# Enable pymodbus wire-level logging (TX and RX)
+for name in [
+    "pymodbus",
+    "pymodbus.client",
+    "pymodbus.transaction",
+    "pymodbus.framer",
+    "pymodbus.framer.rtu_framer",
+    "pymodbus.framer.socket_framer",
+    "pymodbus.transport",
+]:
+    logging.getLogger(name).setLevel(logging.DEBUG)
+
 
 
 READ_INTERVAL = 0.001

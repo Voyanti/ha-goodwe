@@ -89,7 +89,8 @@ goodwe_ht_parameters: dict[str, Parameter] = {
     "Active Power": Parameter(
         addr=32080+1, count=2, dtype=DataType.I32, multiplier=1/1000, unit="kW",
         device_class=DeviceClass.POWER,
-        register_type=RegisterTypes.HOLDING_REGISTER
+        register_type=RegisterTypes.HOLDING_REGISTER,
+        state_class="measurement"
     ),
 
     # Reactive Power (Register 32082)
@@ -110,7 +111,8 @@ goodwe_ht_parameters: dict[str, Parameter] = {
     "Grid Frequency": Parameter(
         addr=32085+1, count=1, dtype=DataType.U16, multiplier=1/100, unit="Hz",
         device_class=DeviceClass.FREQUENCY,
-        register_type=RegisterTypes.HOLDING_REGISTER
+        register_type=RegisterTypes.HOLDING_REGISTER,
+        state_class="measurement"
     ),
 
     # Efficiency (Register 32086)
@@ -124,14 +126,16 @@ goodwe_ht_parameters: dict[str, Parameter] = {
     "Internal Temperature": Parameter(
         addr=32087+1, count=1, dtype=DataType.I16, multiplier=1/10, unit="C",
         device_class=DeviceClass.TEMPERATURE,
-        register_type=RegisterTypes.HOLDING_REGISTER
+        register_type=RegisterTypes.HOLDING_REGISTER,
+        state_class="measurement"
     ),
 
     # Energy Counters (Registers 32106, 32114, 32116, 32118)
     "Cumulative Energy": Parameter(
         addr=32106+1, count=2, dtype=DataType.U32, multiplier=1/100, unit="kWh",
         device_class=DeviceClass.ENERGY,
-        register_type=RegisterTypes.HOLDING_REGISTER
+        register_type=RegisterTypes.HOLDING_REGISTER,
+        state_class="total"
     ),
     "Daily Energy": Parameter(
         addr=32114+1, count=2, dtype=DataType.U32, multiplier=1/100, unit="kWh",
@@ -146,7 +150,8 @@ goodwe_ht_parameters: dict[str, Parameter] = {
     "Yearly Energy": Parameter(
         addr=32118+1, count=2, dtype=DataType.U32, multiplier=1/100, unit="kWh",
         device_class=DeviceClass.ENERGY,
-        register_type=RegisterTypes.HOLDING_REGISTER
+        register_type=RegisterTypes.HOLDING_REGISTER,
+        state_class="total_increasing"
     ),
 
     # Device Information (Registers 35502, 35510)
@@ -210,13 +215,15 @@ for i in range(1, 21):
         f"PV{i} Voltage": Parameter(
             addr=32016+2*(i-1)+1, count=1, dtype=DataType.I16, multiplier=1/10, unit="V",
             device_class=DeviceClass.VOLTAGE,
-            register_type=RegisterTypes.HOLDING_REGISTER
+            register_type=RegisterTypes.HOLDING_REGISTER,
+            state_class="measurement"
         ),
     # PV String Currents (Address 32017-32055)
     f"PV{i} Current": Parameter(
         addr=32017+2*(i-1)+1, count=1, dtype=DataType.I16, multiplier=1/100, unit="A",
         device_class=DeviceClass.CURRENT,
-        register_type=RegisterTypes.HOLDING_REGISTER
+        register_type=RegisterTypes.HOLDING_REGISTER,
+        state_class="measurement"
     ),
     })
 

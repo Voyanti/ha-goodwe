@@ -126,7 +126,7 @@ class Client:
                 f"Non Standard Modbus Exception. Cannot Decode Response")
 
 
-class SpoofClient:
+class SpoofClient(Client):
     """
         Spoofed Modbus client representation: name, nickname (ha_display_name), and pymodbus client.
 
@@ -137,7 +137,7 @@ class SpoofClient:
         def __init__(self, registers: list[int]):
             self.registers = registers
 
-        def isError(self): return False
+        def isError(self): return True
 
     def __init__(self, name: str):
         self.name = name

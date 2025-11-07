@@ -11,7 +11,7 @@ from .loader import load_validate_options
 from .options import AppOptions
 from .client import Client
 from .implemented_servers import ServerTypes
-from .server import Server
+from .server import ReadException, Server
 from .modbus_mqtt import MqttClient, RECV_Q
 from paho.mqtt.enums import MQTTErrorCode
 from paho.mqtt.client import MQTTMessage
@@ -37,8 +37,6 @@ for name in [
     "pymodbus.transport",
 ]:
     logging.getLogger(name).setLevel(logging.DEBUG)
-
-
 
 READ_INTERVAL = 0.001
 
@@ -153,8 +151,12 @@ class App:
                             register_name, value, server)
                     logger.info(
                         f"Published all parameter values for {server.name=}")
+                except ReadException as rerr:
+                    logger.warning(f"Device returned error code response")
+                    self.disconnect_stack.append(server)
+                    continue
                 except ModbusException as e:
-                    logger.error(f"Error reading register from {server.name=}: {e} ")
+                    logger.error(f"Modbus Error while reading from {server.name=}: {e} ")
                     self.disconnect_stack.append(server)
                     continue
 

@@ -37,8 +37,8 @@ class GoodweHT(Server):
 
     def is_available(self, register_name="Active Power"):
         # self.verify_serialnum()
-        # return super().is_available(register_name)
-        return True
+        return super().is_available(register_name)
+        # return True
 
     def set_model(self):
         """

@@ -1,5 +1,6 @@
 import os
 import signal
+from typing import Callable
 import paho.mqtt.client as mqtt
 from paho.mqtt.enums import CallbackAPIVersion
 import json
@@ -12,7 +13,6 @@ from time import time, sleep
 from queue import Queue
 
 logger = logging.getLogger(__name__)
-RECV_Q: Queue = Queue()
 
 
 class MqttClient(mqtt.Client):
@@ -52,11 +52,11 @@ class MqttClient(mqtt.Client):
             logger.info(f"Stopping all threads")
             os.kill(os.getpid(), signal.SIGINT)
 
-        def on_message(client, userdata, message):
+        def on_message(client, userdata, msg):
             logger.info("Received message on MQTT")
             try: 
-                sleep(0.01)
-                RECV_Q.put(message)                         # thread-safe
+                self.message_handler(msg.topic, msg.payload.decode('utf-8'))
+
             except Exception as e:
                 logger.error(f"Exception while handling received message. Stop Process. \n {e}")
                 os.kill(os.getpid(), signal.SIGINT)
@@ -66,6 +66,7 @@ class MqttClient(mqtt.Client):
         self.on_connect = on_connect
         self.on_disconnect = on_disconnect
         self.on_message = on_message
+        self.message_handler: Callable[[str, str], None] = lambda topic, payload: None
 
     def publish_discovery_topics(self, server):
         # TODO check if more separation from server is necessary/ possible

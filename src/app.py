@@ -12,9 +12,10 @@ from .options import AppOptions
 from .client import Client
 from .implemented_servers import ServerTypes
 from .server import ReadException, Server
-from .modbus_mqtt import MqttClient, RECV_Q
+from .modbus_mqtt import MqttClient
 from paho.mqtt.enums import MQTTErrorCode
 from paho.mqtt.client import MQTTMessage
+from .mqtt_message_handler import MessageHandler
 
 import sys
 
@@ -56,7 +57,7 @@ def exit_handler(
 
 
 class App:
-    def __init__(self, client_instantiator_callback, server_instantiator_callback, options_rel_path=None) -> None:
+    def __init__(self, client_instantiator_callback, server_instantiator_callback,  message_handler_instantiator: type[MessageHandler], options_rel_path=None) -> None:
         self.OPTIONS: AppOptions
         # Read configuration
         if options_rel_path:
@@ -228,13 +229,13 @@ def instantiate_servers(OPTIONS: AppOptions, clients: list[Client]) -> list[Serv
 
 if __name__ == "__main__":
     if len(sys.argv) <= 1:  # deployed on homeassistant
-        app = App(instantiate_clients, instantiate_servers)
+        app = App(instantiate_clients, instantiate_servers, MessageHandler)
         app.setup()
         app.connect()
         app.loop()
     else:                   # running locally
         from .client import SpoofClient
-        app = App(instantiate_clients, instantiate_servers, sys.argv[1])
+        app = App(instantiate_clients, instantiate_servers, MessageHandler, sys.argv[1])
         app.OPTIONS.mqtt_host = "localhost"
         app.OPTIONS.mqtt_port = 1884
 
@@ -244,6 +245,7 @@ if __name__ == "__main__":
         app = App(
             client_instantiator_callback=instantiate_spoof_clients,
             server_instantiator_callback=instantiate_servers,
+            message_handler_instantiator=MessageHandler,
             options_rel_path="config.yaml"
         )
 

@@ -1,12 +1,13 @@
 from abc import abstractmethod, ABC
 import logging
-from typing import Optional, TypedDict
+from typing import Any, Optional, TypedDict
 
 from pymodbus import ModbusException
-from .enums import DataType, RegisterTypes, Parameter, DeviceClass
+from .enums import DataType, HAEntityType, RegisterTypes, Parameter, DeviceClass, WriteParameter
 from .client import Client
 from .options import ServerOptions
 from .parameter_types import ParamInfo, HAParamInfo
+from .helpers import slugify, with_retries
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +50,17 @@ class Server(ABC):
     @abstractmethod
     def parameters(self) -> dict[str, Parameter]:
         """ Return a string model name for the implementation."""
+
+    @property
+    @abstractmethod
+    def write_parameters(self) -> dict[str, WriteParameter]:
+        """ Return a dictionary of WriteParameter names and WriteParameter objects."""
+
+    @property
+    def write_parameters_slug_to_name(self) -> dict[str, str]:
+        """ Return a dictionary of mapping slugs to writeparameter names."""
+        write_parameters_slug_to_name: dict[str, str] = {slugify(name):name for name in self.write_parameters.copy()}
+        return write_parameters_slug_to_name
 
     @abstractmethod
     def read_model(self) -> str:
@@ -194,35 +206,51 @@ class Server(ABC):
 
         return val
 
-    # def write_registers(self, value: float, parameter_name: str):
-    #     """
-    #         Write to an individual register using pymodbus.
+    def write_registers(self, parameter_name_slug: str, value: Any, modbus_id_override: Optional[int]=None) -> None:
+        """ 
+        Write a group of registers (parameter) using pymodbus
 
-    #         Reuires implementation of the abstract methods
-    #         'Server._validate_write_val()' and 'Server._encode()'
-    #     """
-    #     logger.info(f"Validating write message")
-    #     self._validate_write_val(parameter_name, value)
+        Requires implementation of the abstract method 'Server._encoded()'
 
-    #     param = self.parameters[parameter_name]
-    #     address = param["addr"]
-    #     dtype = param["dtype"]
-    #     multiplier = param["multiplier"]
-    #     count = param["count"]
-    #     unit = param["unit"]
-    #     slave_id = self.modbus_id
-    #     register_type = param['register_type']
+        Finds correct write register name using mapping from Server.write_registers_slug_to_name
+        """
+        parameter_name = self.write_parameters_slug_to_name[parameter_name_slug]
+        param: WriteParameter = self.write_parameters[parameter_name]
 
-    #     if multiplier != 1:
-    #         value /= multiplier
-    #     values = self._encoded(value)
+        address = param["addr"]
+        dtype = param["dtype"]
+        multiplier = param["multiplier"]
+        count = param["count"]  # TODO
+        if modbus_id_override is not None: 
+            modbus_id = modbus_id_override
+        else:
+            modbus_id = self.modbus_id
+        register_type = param["register_type"]
+        unit = param.get("unit")
 
-    #     logger.info(
-    #         f"Writing {value=} {unit=} to param {parameter_name} at {address=}, {dtype=}, {multiplier=}, {count=}, {register_type=}, {slave_id=}")
+        if param["ha_entity_type"] == HAEntityType.SWITCH or param['ha_entity_type'] == HAEntityType.BUTTON:
+            value = int(value, base=0) # interpret string as integer literal. supports auto detecting base
+        elif dtype != DataType.UTF8:
+            value = float(value)
+            if multiplier != 1:
+                value /= multiplier
+        print(value, dtype)
+        values = self._encoded(value, dtype)
 
-    #     self.connected_client.client.write_registers(address=address-1,
-    #                                                  value=values,
-    #                                                  slave=slave_id)
+        logger.info(
+            f"Writing {values} to param {parameter_name} ({register_type}) of {dtype=} from {address=}, {multiplier=}, {count=}, {modbus_id=}")
+
+        # attempt to write to the register 3 times
+        try:
+            with_retries(self.connected_client.write,
+                        values, address, modbus_id, register_type,
+                        exception = ModbusException,
+                        msg = f"Error writing register {parameter_name}")
+        except ModbusException as e:
+            logger.error(f"Failure to write after 3 attempts. Continuing")
+            return
+
+        logger.info(f"Wrote {value=} {unit=} as {values=} to {parameter_name}.")
 
     def connect(self) -> bool:
         if not self.is_available():

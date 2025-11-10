@@ -22,14 +22,18 @@ class MessageHandler:
             tuple[str, str]: _description_
         """
         # command_topic = f"{self.base_topic}/{server.nickname}/{slugify(register_name)}/set"
+        logger.info(f"decoding {msg_topic}")
         server_ha_display_name: str = msg_topic.split('/')[1]
         s = None
         for s in self.devices: 
-            if s.name == server_ha_display_name:
+            logger.info(f"comparing {s.name}, {server_ha_display_name}")
+            if s.name.lower() == server_ha_display_name:
                 device = s
-        if s is None: raise ValueError(f"Server {server_ha_display_name} not available. Cannot write.")
+                break
+        if device is None: raise ValueError(f"Server {server_ha_display_name} not available. Cannot write.")
         register_name: str = msg_topic.split('/')[2]
 
+        logger.info(f"Decoded {msg_topic=}: {device=}, {register_name=}")
         return (device, register_name)
 
     def decode_and_write(self, msg_topic: str, msg_payload_decoded: str) -> None:

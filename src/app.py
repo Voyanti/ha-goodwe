@@ -20,7 +20,7 @@ from .mqtt_message_handler import MessageHandler
 import sys
 
 logging.basicConfig(
-    level=logging.DEBUG,  # Set logging level
+    level=logging.INFO,  # Set logging level
     # Format with timestamp
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",  # Date format
@@ -28,16 +28,16 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Enable pymodbus wire-level logging (TX and RX)
-for name in [
-    "pymodbus",
-    "pymodbus.client",
-    "pymodbus.transaction",
-    "pymodbus.framer",
-    "pymodbus.framer.rtu_framer",
-    "pymodbus.framer.socket_framer",
-    "pymodbus.transport",
-]:
-    logging.getLogger(name).setLevel(logging.DEBUG)
+# for name in [
+#     "pymodbus",
+#     "pymodbus.client",
+#     "pymodbus.transaction",
+#     "pymodbus.framer",
+#     "pymodbus.framer.rtu_framer",
+#     "pymodbus.framer.socket_framer",
+#     "pymodbus.transport",
+# ]:
+#     logging.getLogger(name).setLevel(logging.DEBUG)
 
 READ_INTERVAL = 0.001
 
@@ -74,9 +74,14 @@ class App:
         # Setup callbacks
         self.client_instantiator_callback = client_instantiator_callback
         self.server_instantiator_callback: Callable[[AppOptions, list[Client]], list[Server]] = server_instantiator_callback
+        self.message_handler_instantiator = message_handler_instantiator
 
     def setup(self) -> None:
         self.sleep_if_midnight()
+
+        if self.OPTIONS.debug:
+            package_logger = logging.getLogger("src")
+            package_logger.setLevel(logging.DEBUG)
 
         logger.info("Instantiate clients")
         self.clients = self.client_instantiator_callback(self.OPTIONS)
@@ -117,6 +122,9 @@ class App:
             
         for server in disconnected_servers:
             self.mqtt_client.publish_availability(False, server)
+
+        self.message_handler = self.message_handler_instantiator(self.servers, self.mqtt_client)
+        self.mqtt_client.message_handler = self.message_handler.decode_and_write
 
         atexit.register(exit_handler, self.servers + self.disconnected_servers,
                         self.clients, self.mqtt_client)

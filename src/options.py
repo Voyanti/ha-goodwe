@@ -52,3 +52,5 @@ class AppOptions:
     mwtt_ha_discovery_topic: str
     mqtt_base_topic: str
     mqtt_reconnect_attempts: int
+
+    debug: bool

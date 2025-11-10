@@ -40,6 +40,37 @@ class Client:
             self.client = ModbusSerialClient(port=cl_options.port, baudrate=cl_options.baudrate,
                                              bytesize=cl_options.bytesize, parity='Y' if cl_options.parity else 'N',
                                              stopbits=cl_options.stopbits)
+            
+    def write(self, values: list[int], address: int, slave_id: int, register_type):
+        """Writes a list of encoded ints to 16-bit registers, 
+        starting at the 1-indexed address specified
+
+        Args:
+            values (list[int]): list of ints encoding the value
+            address (int): modbus register address (1-indexed)
+            slave_id (int): modbus slave_id
+            register_type (RegisterType): only RegisterTypes.HOLDING_REGISTER. Used for validation 
+
+        Raises:
+            ValueError: if register_type not RegisterTypes.HOLDING_REGISTER
+            ModbusException: if a modbus exception occurs
+
+        Returns:
+            ModbusPDU: modbus client response
+        """        
+        if not register_type == RegisterTypes.HOLDING_REGISTER:
+            logger.info(f"unsupported write register type {register_type}")
+            raise ValueError(f"unsupported register type {register_type}")
+        
+        result = self.client.write_registers(address=address-1,
+                                            values=values,
+                                            device_id=slave_id)
+        
+        if result.isError():
+            self._handle_error_response(result)
+            raise ModbusException(f"Error writing register at address {address=} on {slave_id=}")
+    
+        return result
 
     def read(self, address, count, slave_id, register_type):
         """

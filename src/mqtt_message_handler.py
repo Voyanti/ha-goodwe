@@ -25,6 +25,7 @@ class MessageHandler:
         logger.info(f"decoding {msg_topic}")
         server_ha_display_name: str = msg_topic.split('/')[1]
         s = None
+        device = None
         for s in self.devices: 
             logger.info(f"comparing {s.name}, {server_ha_display_name}")
             if s.name.lower() == server_ha_display_name:

@@ -169,8 +169,8 @@ class Server(ABC):
             DeviceClass.POWER_FACTOR: 1,
             DeviceClass.APPARENT_POWER: 0, 
             DeviceClass.CURRENT: 1,
-            DeviceClass.VOLTAGE: 0,
-            DeviceClass.POWER: 0
+            DeviceClass.VOLTAGE: 1,
+            DeviceClass.POWER: 1
         }
         param = self.parameters[parameter_name]  # type: ignore
 

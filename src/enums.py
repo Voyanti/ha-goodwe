@@ -155,6 +155,7 @@ class HAEntityType(Enum):
 
     SENSOR = 'sensor'
     BINARY_SENSOR = 'binary_sensor'
+    BUTTON = 'button'
 
 # all parameters are required to have these fields
 ParameterReq = TypedDict(
@@ -208,7 +209,7 @@ class WriteParameter(WriteParameterReq, total=False):
     # switch
     payload_off: int
     payload_on: int
-
+    payload_press: int # button HAEntityType
     
 
 if __name__ == "__main__":

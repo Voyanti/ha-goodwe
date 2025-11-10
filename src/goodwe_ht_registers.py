@@ -230,7 +230,7 @@ for i in range(1, 21):
 
 goodwe_ht_write_params: dict[str, WriteParameter | WriteSelectParameter] = {
     "Active Power Control": WriteParameter(
-        addr=42408,
+        addr=42408+1,
         count=1,
         dtype=DataType.I16,
         multiplier=10,
@@ -239,7 +239,25 @@ goodwe_ht_write_params: dict[str, WriteParameter | WriteSelectParameter] = {
         min=0, 
         max=110,
         unit="%"
-    )
+    ),
+    "Command: Power On": WriteParameter(
+        addr=41330+1,
+        count=1,
+        dtype=DataType.U16,
+        multiplier=1,
+        register_type=RegisterTypes.HOLDING_REGISTER,
+        ha_entity_type=HAEntityType.BUTTON,
+        payload_press=0
+    ),
+    "Command: Power Off": WriteParameter(
+        addr=41331+1,
+        count=1,
+        dtype=DataType.U16,
+        multiplier=1,
+        register_type=RegisterTypes.HOLDING_REGISTER,
+        ha_entity_type=HAEntityType.BUTTON,
+        payload_press=0
+    ),
 }
 
 if __name__ == "__main__":

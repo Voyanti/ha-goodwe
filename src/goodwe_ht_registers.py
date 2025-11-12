@@ -240,7 +240,7 @@ goodwe_ht_write_params: dict[str, WriteParameter | WriteSelectParameter] = {
         max=110,
         unit="%"
     ),
-    "Command: Power On": WriteParameter(
+    "Command Power On": WriteParameter(
         addr=41330+1,
         count=1,
         dtype=DataType.U16,
@@ -249,7 +249,7 @@ goodwe_ht_write_params: dict[str, WriteParameter | WriteSelectParameter] = {
         ha_entity_type=HAEntityType.BUTTON,
         payload_press=0
     ),
-    "Command: Power Off": WriteParameter(
+    "Command Power Off": WriteParameter(
         addr=41331+1,
         count=1,
         dtype=DataType.U16,

@@ -177,6 +177,16 @@ class SpoofClient(Client):
         logger.info(f"SPOOFING READ {slave_id=} {address=}")
         response = SpoofClient.SpoofResponse([73 for _ in range(count)])
         return response
+    
+    def write(self, values: list[int], address: int, slave_id: int, register_type):
+        if not register_type == RegisterTypes.HOLDING_REGISTER:
+            logger.info(f"unsupported write register type {register_type}")
+            raise ValueError(f"unsupported register type {register_type}")
+        
+        logger.info(f"SPOOFING WRITE {slave_id=} {address=}")
+        response = SpoofClient.SpoofResponse(values)
+        return response
+        
 
     def connect(self, num_retries=2, sleep_interval=3):
         logger.info(f"SPOOFING CONNECT to {self}")

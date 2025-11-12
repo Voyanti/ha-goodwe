@@ -24,7 +24,7 @@ options:
       server_type: GOODWE_GT
       connected_client: client1
       modbus_id: 2
-    - name: HT
+    - name: goodweht1
       serialnum: USD0B4502B
       server_type: GOODWE_HT
       connected_client: client1
@@ -46,6 +46,7 @@ options:
   mwtt_ha_discovery_topic: homeassistant
   mqtt_base_topic: modbus
   mqtt_reconnect_attempts: 5
+  debug: false
 schema:
   servers:
     - name: str
@@ -74,3 +75,4 @@ schema:
   mwtt_ha_discovery_topic: str
   mqtt_base_topic: str
   mqtt_reconnect_attempts: int
+  debug: bool

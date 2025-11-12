@@ -263,5 +263,7 @@ if __name__ == "__main__":
         app.connect()
         app.loop(2)
 
+        app.mqtt_client.message_handler("goodwe/goodweht1/command_power_off/set", "0")
+        app.loop(2)
     # finally:
     #     exit_handler(servers, clients, mqtt_client) TODO NB

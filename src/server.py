@@ -172,15 +172,18 @@ class Server(ABC):
             DeviceClass.VOLTAGE: 1,
             DeviceClass.POWER: 1
         }
-        param = self.parameters[parameter_name]  # type: ignore
+        param = self.parameters.get(parameter_name, self.write_parameters.get(parameter_name))  # type: ignore
+        if param is None:
+            logger.info(f"No parameter {parameter_name=} for server {self.name} defined. Attempt to read.")
+            raise ValueError(f"No parameter {parameter_name=} for server {self.name} defined. Attempt to read.")
 
         address = param["addr"]
         dtype = param["dtype"]
         multiplier = param["multiplier"]
         # count = param.get('count', dtype.size // 2) #TODO
         count = param["count"]  # TODO
-        unit = param["unit"]
-        device_class = param['device_class']
+        unit = param.get("unit", None)
+        device_class = param.get('device_class', None)
         slave_id = self.modbus_id
         register_type = param['register_type']
 
@@ -250,7 +253,8 @@ class Server(ABC):
             logger.error(f"Failure to write after 3 attempts. Continuing")
             return
 
-        logger.info(f"Wrote {value=} {unit=} as {values=} to {parameter_name}.")
+       
+       
 
     def connect(self) -> bool:
         if not self.is_available():

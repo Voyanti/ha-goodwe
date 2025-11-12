@@ -47,8 +47,15 @@ class MessageHandler:
         # write
         server.write_registers(register_name, msg_payload_decoded)
 
-        # update state by read back
-        value = server.read_registers(server.write_parameters_slug_to_name[register_name])
+        # update state by read back (skip for write-only button commands)
+        param_name = server.write_parameters_slug_to_name[register_name]
+        param_details = server.write_parameters[param_name]
+        
+        if param_details.get("payload_press") is not None:
+            logger.info(f"Skipping read back for button command {param_name}")
+            return
+            
+        value = server.read_registers(param_name)
         logger.info(f"Read back after write attempt {value=}")
         self.mqtt_client.publish_to_ha(
             register_name, value, server)

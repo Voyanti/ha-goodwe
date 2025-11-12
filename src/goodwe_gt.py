@@ -2,7 +2,7 @@ from typing import final
 
 from .enums import DataType, DeviceClass, Parameter, RegisterTypes
 from .server import Server
-from .goodwe_gt_registers import goodwe_gt_parameters
+from .goodwe_gt_registers import goodwe_gt_parameters, goodwe_gt_write_params
 import logging
 logger = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ class GoodweGT(Server):
         self._supported_models = ('GW125K-GT', )  # GT-series grid-tied inverters
         self._serialnum = "unknown"
         self._parameters = dict.copy(goodwe_gt_parameters)
-        self._write_parameters = {}
+        self._write_parameters = dict.copy(goodwe_gt_write_params)
 
     @property
     def manufacturer(self):

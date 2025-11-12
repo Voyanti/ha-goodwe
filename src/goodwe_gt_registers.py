@@ -1,5 +1,4 @@
-from .enums import DataType, DeviceClass, Parameter, RegisterTypes
-
+from .enums import DataType, DeviceClass, HAEntityType, Parameter, RegisterTypes, WriteParameter, WriteSelectParameter
 
 goodwe_gt_parameters: dict[str, Parameter] = {
     # Grid Line Voltages (Address 32066-32068)
@@ -139,6 +138,27 @@ for i in range(1, 21):
         state_class="measurement"
     ),
     })
+
+goodwe_gt_write_params: dict[str, WriteParameter | WriteSelectParameter] = {
+    "Command: Power On": WriteParameter(
+        addr=41330+1,
+        count=1,
+        dtype=DataType.U16,
+        multiplier=1,
+        register_type=RegisterTypes.HOLDING_REGISTER,
+        ha_entity_type=HAEntityType.BUTTON,
+        payload_press=0
+    ),
+    "Command: Power Off": WriteParameter(
+        addr=41331+1,
+        count=1,
+        dtype=DataType.U16,
+        multiplier=1,
+        register_type=RegisterTypes.HOLDING_REGISTER,
+        ha_entity_type=HAEntityType.BUTTON,
+        payload_press=0
+    ),
+}
 
 
 if __name__ == "__main__":

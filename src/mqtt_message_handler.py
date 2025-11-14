@@ -44,6 +44,16 @@ class MessageHandler:
         # find implied register from topic
         server, register_name = self._decode_subscribed_topic(msg_topic)
 
+        if register_name == "Power Switch":
+            logger.info(f"Work-around Switch logic for {register_name=}")
+
+            if msg_payload_decoded == '0': # off
+                server.write_registers("Command Power Off", "0")
+            else:
+                server.write_registers("Command Power On", "1")
+
+            return
+
         # write
         server.write_registers(register_name, msg_payload_decoded)
 

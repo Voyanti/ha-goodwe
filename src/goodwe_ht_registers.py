@@ -233,7 +233,7 @@ goodwe_ht_write_params: dict[str, WriteParameter | WriteSelectParameter] = {
         addr=42408+1,
         count=1,
         dtype=DataType.I16,
-        multiplier=10,
+        multiplier=1/10,
         register_type=RegisterTypes.HOLDING_REGISTER,
         ha_entity_type=HAEntityType.NUMBER,
         min=0, 
@@ -258,6 +258,16 @@ goodwe_ht_write_params: dict[str, WriteParameter | WriteSelectParameter] = {
         ha_entity_type=HAEntityType.BUTTON,
         payload_press=0
     ),
+    "Power Switch": WriteParameter(
+        addr=41331+1,
+        count=1,
+        dtype=DataType.U16,
+        multiplier=1,
+        register_type=RegisterTypes.HOLDING_REGISTER,
+        ha_entity_type=HAEntityType.SWITCH,
+        payload_on=1,
+        payload_off=0,
+    )
 }
 
 if __name__ == "__main__":

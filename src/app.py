@@ -154,6 +154,15 @@ class App:
             for server in self.servers:
                 sleep(READ_INTERVAL)
                 try: 
+                    for write_register_name, _ in server.write_parameters.items():
+                        sleep(READ_INTERVAL)
+                        if write_register_name == "Power Switch":
+                            continue
+                        value = server.read_registers(write_register_name)
+                        self.mqtt_client.publish_to_ha(
+                            write_register_name, value, server)
+                    logger.info(
+                        f"Published all Write parameter values for {server.name=}")
                     for register_name, details in server.parameters.items():
                         value = server.read_registers(register_name)
                         self.mqtt_client.publish_to_ha(

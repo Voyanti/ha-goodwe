@@ -198,6 +198,11 @@ goodwe_ht_parameters: dict[str, Parameter] = {
         device_class=DeviceClass.ENUM,
         register_type=RegisterTypes.HOLDING_REGISTER
     ),
+    # "Max Active Power": Parameter( # slave device failure when reading on G@-1000K
+    #     addr=41380+1, count=1, dtype=DataType.U16, multiplier=1/10, unit="kW",
+    #     device_class=DeviceClass.POWER,
+    #     register_type=RegisterTypes.HOLDING_REGISTER
+    # ),
 
     # Status 2 (Register 37207)
     # Often observe slave device failure with this register.

@@ -60,6 +60,7 @@ class Server(ABC):
     def write_parameters_slug_to_name(self) -> dict[str, str]:
         """ Return a dictionary of mapping slugs to writeparameter names."""
         write_parameters_slug_to_name: dict[str, str] = {slugify(name):name for name in self.write_parameters.copy()}
+        # logging.info(f"map {write_parameters_slug_to_name}" )
         return write_parameters_slug_to_name
 
     @abstractmethod

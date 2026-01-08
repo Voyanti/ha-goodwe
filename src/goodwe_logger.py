@@ -1,106 +1,119 @@
 from typing import final
 
-from .enums import DataType, DeviceClass, Parameter, RegisterTypes
+from .enums import DataType, DeviceClass, HAEntityType, Parameter, RegisterTypes, WriteParameter
 from .server import Server
 import logging
 logger = logging.getLogger(__name__)
 
+write_params: dict[str, WriteParameter] = {
+    # Register 55: Active power adjustment mode (RW)
+    "Enable Active Power Control": WriteParameter(
+        addr=20200+1, count=1, dtype=DataType.U16, multiplier=1/1, unit="",
+        device_class=DeviceClass.ENUM,
+        register_type=RegisterTypes.HOLDING_REGISTER,
+        ha_entity_type=HAEntityType.SWITCH,
+        payload_on=1,
+        payload_off=0
+    ),
+    # Register 10: Active power adjustment (RW)
+    "Active Power Adjustment": WriteParameter(
+        addr=20013+1, count=2, dtype=DataType.U32, multiplier=1/10, unit="kW",
+        device_class=DeviceClass.POWER,
+        register_type=RegisterTypes.HOLDING_REGISTER,
+        ha_entity_type=HAEntityType.NUMBER,
+        min=0,
+        max=500000,
+    ),
+    # Register 14: Set Active Power (percentage) (RW)
+    "Set Active Power Percentage": WriteParameter(
+        addr=20021+1, count=1, dtype=DataType.U16, multiplier=1/10, unit="%",
+        device_class=DeviceClass.POWER_FACTOR,
+        register_type=RegisterTypes.HOLDING_REGISTER,
+        ha_entity_type=HAEntityType.NUMBER,
+        min=0, max=100,
+    ),
+}
+
 goodwe_parameters: dict[str, Parameter] = {
     "System Time": Parameter(
-        addr=20000, count=2, dtype=DataType.U32, multiplier=1, unit="",
+        addr=20000+1, count=2, dtype=DataType.U32, multiplier=1/1, unit="",
         device_class=DeviceClass.TIMESTAMP,
         register_type=RegisterTypes.HOLDING_REGISTER
     ),
-    # Register 12: Active power adjustment (RW)
-    "Active Power Adjustment 2": Parameter(
-        addr=20017, count=2, dtype=DataType.U32, multiplier=10, unit="kW",
-        device_class=DeviceClass.POWER,
-        register_type=RegisterTypes.HOLDING_REGISTER
-    ),
-    # Register 14: Set Active Power (percentage) (RW)
-    "Set Active Power Percentage": Parameter(
-        addr=20021, count=1, dtype=DataType.U16, multiplier=10, unit="%",
-        device_class=DeviceClass.POWER_FACTOR,
-        register_type=RegisterTypes.HOLDING_REGISTER
-    ),
+
     # Register 17: Total Active Power (RO)
     "Total Active Power": Parameter(
-        addr=20025, count=2, dtype=DataType.I32, multiplier=1000, unit="kW",
+        addr=20025+1, count=2, dtype=DataType.I32, multiplier=1/1000, unit="kW",
         device_class=DeviceClass.POWER,
-        register_type=RegisterTypes.INPUT_REGISTER
+        register_type=RegisterTypes.HOLDING_REGISTER
     ),
     # Register 24: Plants Status (RO)
     "Grid status": Parameter(
-        addr=20038, count=1, dtype=DataType.U16, multiplier=1, unit="",
-        device_class=DeviceClass.ENUM,
-        register_type=RegisterTypes.INPUT_REGISTER
-    ),
-    # Register 25: Total A-Phase current (RO)
-    "Total A-Phase Current": Parameter(
-        addr=20039, count=1, dtype=DataType.I16, multiplier=10, unit="A",
-        device_class=DeviceClass.CURRENT,
-        register_type=RegisterTypes.INPUT_REGISTER
-    ),
-    # Register 26: Total B-Phase current (RO)
-    "Total B-Phase Current": Parameter(
-        addr=20040, count=1, dtype=DataType.I16, multiplier=10, unit="A",
-        device_class=DeviceClass.CURRENT,
-        register_type=RegisterTypes.INPUT_REGISTER
-    ),
-    # Register 27: Total C-Phase current (RO)
-    "Total C-Phase Current": Parameter(
-        addr=20041, count=1, dtype=DataType.I16, multiplier=10, unit="A",
-        device_class=DeviceClass.CURRENT,
-        register_type=RegisterTypes.INPUT_REGISTER
-    ),
-    # Register 28: Vab (RO)
-    "Vab": Parameter(
-        addr=20042, count=1, dtype=DataType.U16, multiplier=10, unit="V",
-        device_class=DeviceClass.VOLTAGE,
-        register_type=RegisterTypes.INPUT_REGISTER
-    ),
-    # Register 29: Vbc (RO)
-    "Vbc": Parameter(
-        addr=20043, count=1, dtype=DataType.U16, multiplier=10, unit="V",
-        device_class=DeviceClass.VOLTAGE,
-        register_type=RegisterTypes.INPUT_REGISTER
-    ),
-    # Register 30: Vca (RO)
-    "Vca": Parameter(
-        addr=20044, count=1, dtype=DataType.U16, multiplier=10, unit="V",
-        device_class=DeviceClass.VOLTAGE,
-        register_type=RegisterTypes.INPUT_REGISTER
-    ),
-    # Register 35: Maximum value of active power regulation (RO)
-    "Maximum Active Power Regulation": Parameter(
-        addr=20060, count=2, dtype=DataType.U32, multiplier=1000, unit="kW",
-        device_class=DeviceClass.POWER,
-        register_type=RegisterTypes.INPUT_REGISTER
-    ),
-    # Register 38: ESN - Electronic Serial Number (RO)
-    "ESN": Parameter(
-        addr=20064, count=8, dtype=DataType.UTF8, multiplier=1, unit="",
-        device_class=DeviceClass.ENUM,
-        register_type=RegisterTypes.INPUT_REGISTER
-    ),
-    # Register 41: Target value of power dispatch (RO)
-    "Target Power Dispatch": Parameter(
-        addr=20075, count=2, dtype=DataType.U32, multiplier=10, unit="kW",
-        device_class=DeviceClass.POWER,
-        register_type=RegisterTypes.INPUT_REGISTER
-    ),
-    # Register 43: Percentage of active dispatch (RO)
-    "Active Dispatch Percentage": Parameter(
-        addr=20079, count=2, dtype=DataType.U32, multiplier=1, unit="%",
-        device_class=DeviceClass.POWER_FACTOR,
-        register_type=RegisterTypes.INPUT_REGISTER
-    ),
-    # Register 55: Active power adjustment mode (RW)
-    "Active Power Adjustment Mode": Parameter(
-        addr=20200, count=1, dtype=DataType.U16, multiplier=1, unit="",
+        addr=20038+1, count=1, dtype=DataType.U16, multiplier=1/1, unit="",
         device_class=DeviceClass.ENUM,
         register_type=RegisterTypes.HOLDING_REGISTER
     ),
+    # Register 25: Total A-Phase current (RO)
+    "Total A-Phase Current": Parameter(
+        addr=20039+1, count=1, dtype=DataType.I16, multiplier=1/10, unit="A",
+        device_class=DeviceClass.CURRENT,
+        register_type=RegisterTypes.HOLDING_REGISTER
+    ),
+    # Register 26: Total B-Phase current (RO)
+    "Total B-Phase Current": Parameter(
+        addr=20040+1, count=1, dtype=DataType.I16, multiplier=1/10, unit="A",
+        device_class=DeviceClass.CURRENT,
+        register_type=RegisterTypes.HOLDING_REGISTER
+    ),
+    # Register 27: Total C-Phase current (RO)
+    "Total C-Phase Current": Parameter(
+        addr=20041+1, count=1, dtype=DataType.I16, multiplier=1/10, unit="A",
+        device_class=DeviceClass.CURRENT,
+        register_type=RegisterTypes.HOLDING_REGISTER
+    ),
+    # Register 28: Vab (RO)
+    "Vab": Parameter(
+        addr=20042+1, count=1, dtype=DataType.U16, multiplier=1/10, unit="V",
+        device_class=DeviceClass.VOLTAGE,
+        register_type=RegisterTypes.HOLDING_REGISTER
+    ),
+    # Register 29: Vbc (RO)
+    "Vbc": Parameter(
+        addr=20043+1, count=1, dtype=DataType.U16, multiplier=1/10, unit="V",
+        device_class=DeviceClass.VOLTAGE,
+        register_type=RegisterTypes.HOLDING_REGISTER
+    ),
+    # Register 30: Vca (RO)
+    "Vca": Parameter(
+        addr=20044+1, count=1, dtype=DataType.U16, multiplier=1/10, unit="V",
+        device_class=DeviceClass.VOLTAGE,
+        register_type=RegisterTypes.HOLDING_REGISTER
+    ),
+    # Register 35: Maximum value of active power regulation (RO)
+    "Maximum Active Power Regulation": Parameter(
+        addr=20060+1, count=2, dtype=DataType.U32, multiplier=1/1000, unit="kW",
+        device_class=DeviceClass.POWER,
+        register_type=RegisterTypes.HOLDING_REGISTER
+    ),
+    # Register 38: ESN - Electronic Serial Number (RO)
+    "ESN": Parameter(
+        addr=20064+1, count=8, dtype=DataType.UTF8, multiplier=1/1, unit="",
+        device_class=DeviceClass.ENUM,
+        register_type=RegisterTypes.HOLDING_REGISTER
+    ),
+    # Register 41: Target value of power dispatch (RO)
+    "Target Power Dispatch Read Only": Parameter(
+        addr=20075+1, count=2, dtype=DataType.U32, multiplier=1/10, unit="kW",
+        device_class=DeviceClass.POWER,
+        register_type=RegisterTypes.HOLDING_REGISTER
+    ),
+    # Register 43: Percentage of active dispatch (RO)
+    "Target Power Dispatch Percentage Read Only": Parameter(
+        addr=20079+1, count=2, dtype=DataType.U32, multiplier=1/1, unit="%",
+        device_class=DeviceClass.ENUM,
+        register_type=RegisterTypes.HOLDING_REGISTER
+    ),
+    
 }
 
 
@@ -113,7 +126,7 @@ class GoodweLogger(Server):
         self._supported_models = ('ezlogger',) 
         self._serialnum = "unknown"
         self._parameters = dict.copy(goodwe_parameters)
-        self._write_parameters = {}
+        self._write_parameters = dict.copy(write_params)
 
     @property
     def manufacturer(self):

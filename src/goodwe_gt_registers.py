@@ -118,7 +118,17 @@ goodwe_gt_parameters: dict[str, Parameter] = {
     "Work Mode": Parameter(
         addr=35758+1, count=1, dtype=DataType.U16, multiplier=1, unit="",
         device_class=DeviceClass.ENUM,
-        register_type=RegisterTypes.HOLDING_REGISTER
+        register_type=RegisterTypes.HOLDING_REGISTER,
+        value_template= """
+                            {% set states = {
+                            '0': 'Standby',
+                            '1': 'Grid-connected operation',
+                            '2': 'Fault',
+                            '4': 'Self-test',
+                            '5': 'Flash mode'
+                            } %}
+                            {{ states[value] if value in states else 'unknown' }}
+                            """
     ),
 }
 

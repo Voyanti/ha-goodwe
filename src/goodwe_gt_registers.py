@@ -113,7 +113,31 @@ goodwe_gt_parameters: dict[str, Parameter] = {
     "DSP Fault Code": Parameter(
         addr=35710+1, count=2, dtype=DataType.U32, multiplier=1, unit="",
         device_class=DeviceClass.ENUM,
-        register_type=RegisterTypes.HOLDING_REGISTER
+        register_type=RegisterTypes.HOLDING_REGISTER,
+        value_template= """
+            {% set val = value | int %}
+            {% set error_mapping = {
+                31: 'SPI Fail', 30: 'EEPROM R/W Fail', 29: 'Fac Fail', 28: 'DC SPD Fail',
+                27: 'Night SPS Fault', 26: 'Consistent Fault', 25: 'Relay Chk Fail', 
+                24: 'BUS-start Timeout', 23: 'OVGR Fault', 22: 'PV Reverse Fault', 
+                21: 'Night BUS Fault', 20: 'CPLD Error', 19: 'DCI Out Range', 
+                18: 'Isolation Fail', 17: 'Grid Voltage Fail', 16: 'EFan Fail', 
+                15: 'GFCI Chk Fail', 14: 'AFCI Fault', 13: 'Overtemp', 12: 'IFan Fail', 
+                11: 'DC Bus High', 10: 'Ground I Fail', 9: 'Utility Loss', 8: 'AC HCT Fail', 
+                7: 'Relay Dev Fail', 6: 'GFCI Fail', 5: 'DC Bus Low', 4: 'AC SPD Fail', 
+                3: 'DC Switch Fail', 2: 'Ref 1.5V Fail', 1: 'AC HCT Chk Fail', 0: 'Slave DSP Error'
+            } %}
+            {# Use a namespace to store the list so it can be modified inside the loop #}
+            {% set ns = namespace(errors=[]) %}
+            {% for bit, message in error_mapping.items() %}
+                {% set bit_value = 2 ** bit %}
+                {# Perform bitwise AND using a floor division / modulo check #}
+                {% if (val // bit_value) % 2 == 1 %}
+                    {% set ns.errors = ns.errors + [message] %}
+                {% endif %}
+            {% endfor %}
+            {{ ns.errors | join(', ') if ns.errors | length > 0 else 'Normal' }}
+        """
     ),
     "Work Mode": Parameter(
         addr=35758+1, count=1, dtype=DataType.U16, multiplier=1, unit="",

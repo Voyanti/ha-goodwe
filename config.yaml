@@ -1,8 +1,7 @@
 name: "Goodwe Inverter"
-version: "0.1.2"
+version: "0.1.3"
 image: ghcr.io/voyanti/ha-goodwe
 slug: "ha-goodwe"
-description: "Goodwe Inverter Prebuilt"
 init: false
 startup: application
 boot: auto
@@ -60,7 +59,7 @@ schema:
     - name: str
       type: list(TCP|RTU)
       host: str?
-      port: str?
+      port: int?
       baudrate: int?
       bytesize: int?
       parity: bool?

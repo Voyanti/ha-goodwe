@@ -201,6 +201,7 @@ goodwe_gt_write_params: dict[str, WriteParameter | WriteSelectParameter] = {
         ha_entity_type=HAEntityType.SWITCH,
         payload_on=1,
         payload_off=0,
+        always_available=True
     )
 }
 

@@ -210,6 +210,8 @@ class WriteParameter(WriteParameterReq, total=False):
     payload_off: int
     payload_on: int
     payload_press: int # button HAEntityType
+
+    always_available: bool
     
 
 if __name__ == "__main__":

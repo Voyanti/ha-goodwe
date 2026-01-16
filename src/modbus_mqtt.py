@@ -98,11 +98,12 @@ class MqttClient(mqtt.Client):
                 "name": register_name,
                 "unique_id": f"{nickname}_{slugify(register_name)}",
                 "state_topic": state_topic,
-                "availability_topic": availability_topic,
                 "device": device,
                 "device_class": details["device_class"].value,
                 "unit_of_measurement": details["unit"],
             }
+            if not details.get("always_available"):
+                discovery_payload["availability_topic"] = availability_topic
             if details["unit"] != "":
                 discovery_payload.update(unit_of_measurement=details["unit"])
             if "value_template" in details: #enum

@@ -168,7 +168,7 @@ class SpoofClient(Client):
         def __init__(self, registers: list[int]):
             self.registers = registers
 
-        def isError(self): return True
+        def isError(self): return False
 
     def __init__(self, name: str):
         self.name = name

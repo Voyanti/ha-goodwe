@@ -139,7 +139,10 @@ class Server(ABC):
             response = self.connected_client.read(
                 address, count, slave_id, register_type)
         except ModbusException as e:
-            logger.error(f"{e.with_traceback}")
+            logger.error(f"{e}")
+            return False
+        except OSError as e:
+            logger.error(f"{e}")
             return False
 
         # other errors
@@ -258,6 +261,13 @@ class Server(ABC):
        
 
     def connect(self) -> bool:
+        logger.debug(f"Connecting to server {self}")
+        try:
+            self.connected_client.connect()
+        except ConnectionError as ce:
+            logger.error(f"Could not connect to the modbus client while attempting server connection")
+            return False
+
         if not self.is_available():
             logger.error(f"Server {self.name} not available")
             return False

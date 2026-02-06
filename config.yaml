@@ -1,5 +1,5 @@
 name: "Goodwe Inverter"
-version: "0.1.6"
+version: "0.1.7"
 image: ghcr.io/voyanti/ha-goodwe
 slug: "ha-goodwe"
 description: "Goodwe Inverter Prebuilt"
